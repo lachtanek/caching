@@ -150,7 +150,8 @@ class FileStorage implements Nette\Caching\IStorage
 		$handle = fopen($cacheFile, 'c+b');
 		if ($handle) {
 			$this->locks[$key] = $handle;
-			flock($handle, LOCK_EX);
+			\DirFlock::lock($cacheFile, LOCK_EX);
+			// flock($handle, LOCK_EX);
 		}
 	}
 
@@ -231,7 +232,8 @@ class FileStorage implements Nette\Caching\IStorage
 				break;
 			}
 
-			flock($handle, LOCK_UN);
+			\DirFlock::lock($cacheFile, LOCK_UN);
+			// flock($handle, LOCK_UN);
 			fclose($handle);
 			return;
 		} while (FALSE);
@@ -287,7 +289,8 @@ class FileStorage implements Nette\Caching\IStorage
 						continue;
 					}
 
-					flock($meta[self::HANDLE], LOCK_UN);
+					\DirFlock::lock($meta[self::FILE], LOCK_UN);
+					// flock($meta[self::HANDLE], LOCK_UN);
 					fclose($meta[self::HANDLE]);
 				}
 			}
@@ -320,7 +323,8 @@ class FileStorage implements Nette\Caching\IStorage
 			return NULL;
 		}
 
-		flock($handle, $lock);
+		\DirFlock::lock($file, $lock);
+		// flock($handle, $lock);
 
 		$head = stream_get_contents($handle, self::META_HEADER_LEN);
 		if ($head && strlen($head) === self::META_HEADER_LEN) {
@@ -332,7 +336,8 @@ class FileStorage implements Nette\Caching\IStorage
 			return $meta;
 		}
 
-		flock($handle, LOCK_UN);
+		\DirFlock::lock($file, LOCK_UN);
+		// flock($handle, LOCK_UN);
 		fclose($handle);
 		return NULL;
 	}
@@ -346,7 +351,8 @@ class FileStorage implements Nette\Caching\IStorage
 	protected function readData($meta)
 	{
 		$data = stream_get_contents($meta[self::HANDLE]);
-		flock($meta[self::HANDLE], LOCK_UN);
+		\DirFlock::lock($meta[self::FILE], LOCK_UN);
+		// flock($meta[self::HANDLE], LOCK_UN);
 		fclose($meta[self::HANDLE]);
 
 		if (empty($meta[self::META_SERIALIZED])) {
@@ -382,7 +388,8 @@ class FileStorage implements Nette\Caching\IStorage
 	{
 		if (@unlink($file)) { // @ - file may not already exist
 			if ($handle) {
-				flock($handle, LOCK_UN);
+				\DirFlock::lock($file, LOCK_UN);
+				// flock($handle, LOCK_UN);
 				fclose($handle);
 			}
 			return;
@@ -392,9 +399,11 @@ class FileStorage implements Nette\Caching\IStorage
 			$handle = @fopen($file, 'r+'); // @ - file may not exist
 		}
 		if ($handle) {
-			flock($handle, LOCK_EX);
+			\DirFlock($file, LOCK_EX);
+			// flock($handle, LOCK_EX);
 			ftruncate($handle, 0);
-			flock($handle, LOCK_UN);
+			\DirFlock($file, LOCK_UN);
+			// flock($handle, LOCK_UN);
 			fclose($handle);
 			@unlink($file); // @ - file may not already exist
 		}
