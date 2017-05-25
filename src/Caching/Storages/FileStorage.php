@@ -399,10 +399,10 @@ class FileStorage implements Nette\Caching\IStorage
 			$handle = @fopen($file, 'r+'); // @ - file may not exist
 		}
 		if ($handle) {
-			\DirFlock($file, LOCK_EX);
+			\DirFlock::lock($file, LOCK_EX);
 			// flock($handle, LOCK_EX);
 			ftruncate($handle, 0);
-			\DirFlock($file, LOCK_UN);
+			\DirFlock::lock($file, LOCK_UN);
 			// flock($handle, LOCK_UN);
 			fclose($handle);
 			@unlink($file); // @ - file may not already exist
